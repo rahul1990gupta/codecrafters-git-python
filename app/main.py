@@ -17,16 +17,8 @@ def main():
         print("Initialized git directory")
     elif command == "cat-file":
         sha = sys.argv[3]
-        path = f".git/objects/{sha[:2]}/{sha[2:]}"
-        
-        """
-        An object starts with a header that specifies its type: blob, commit, tag or tree. This header is followed by an ASCII space (0x20), then the size of the object in bytes as an ASCII number, then null (0x00) (the null byte), then the contents of the objec
-        """
-        
-        with open(path, 'rb') as f:
-            raw = zlib.decompress(f.read())
-        fc_index = raw.find(b"\x00")
-        print(raw[fc_index+1:].decode(), end="")
+        content = read_object(sha)
+        print(content.decode(), end="")
     elif command == "hash-object":
         fname = sys.argv[3]
         with open(fname, 'rb') as f:
@@ -42,10 +34,32 @@ def main():
         
         with open(f".git/objects/{sha[:2]}/{sha[2:]}", "wb") as f:
             f.write(zlib.compress(obj_content))
+    elif command == "ls-tree":
+        sha = sys.argv[3]
+        content = read_object(sha)
         
 
+        buff = content
+        
+        while b"\x00" in buff:
+            nb_index = buff.find(b"\x00")
+            oname = buff[:nb_index].split(b"\x20")[1]
+            print(oname.decode())
+            
+            offset = nb_index + 20 
+            buff = buff[nb_index + 20:]
+            
     else:
         raise RuntimeError(f"Unknown command #{command}")
+
+
+def read_object(sha):
+    path = f".git/objects/{sha[:2]}/{sha[2:]}"
+    with open(path, 'rb') as f:
+        raw = zlib.decompress(f.read())
+    fc_index = raw.find(b"\x00")
+    
+    return raw[fc_index+1:]
 
 
 if __name__ == "__main__":
