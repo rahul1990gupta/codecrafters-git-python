@@ -73,7 +73,6 @@ def commit_tree(tree_sha, cmsg, parent):
     content += astr + b"\n" + cstr + b"\n\n" + cmsg.encode()
     # content will be bytes
 
-    print(content)
     sha = serialize('commit', content)
     return sha
 
