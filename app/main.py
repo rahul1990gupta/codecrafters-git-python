@@ -27,6 +27,22 @@ def main():
             raw = zlib.decompress(f.read())
         fc_index = raw.find(b"\x00")
         print(raw[fc_index+1:].decode(), end="")
+    elif command == "hash-object":
+        fname = sys.argv[3]
+        with open(fname, 'rb') as f:
+            content = f.read()
+        size = len(content)
+        header = f"blob {size}"
+        obj_content = header.encode() + b"\x00" + content 
+        
+        import hashlib
+        sha = hashlib.sha1(obj_content).hexdigest()
+        print(sha)
+        os.mkdir(f".git/objects/{sha[:2]}")
+        
+        with open(f".git/objects/{sha[:2]}/{sha[2:]}", "wb") as f:
+            f.write(zlib.compress(obj_content))
+        
 
     else:
         raise RuntimeError(f"Unknown command #{command}")
