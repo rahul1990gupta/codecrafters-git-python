@@ -39,9 +39,43 @@ def main():
     elif command == "write-tree":
         sha = write_directory(os.getcwd())
         print(sha.hexdigest())
+    elif command == "commit-tree":
+        tree_sha = sys.argv[2]
+        parent = None
+        if sys.argv[3] == "-p":
+            parent = sys.argv[4]
+            cmsg = sys.argv[6]
+        elif sys.argv[3] == "-m":
+            cmsg = sys.argv[4]
+        sha = commit_tree(tree_sha, cmsg, parent)
+        print(sha.hexdigest())
     else:
         raise RuntimeError(f"Unknown command #{command}")
 
+
+"""
+tree {tree_sha}
+{parents}
+author {author_name} <{author_email}> {author_date_seconds} {author_date_timezone}
+committer {committer_name} <{committer_email}> {committer_date_seconds} {committer_date_timezone}
+
+{commit message}
+"""
+    
+def commit_tree(tree_sha, cmsg, parent):
+    astr = b"author Scott Chacon <schacon@gmail.com> 1243040974 -0700"
+    cstr = b"committer Scott Chacon <schacon@gmail.com> 1243040974 -0700"
+
+    content = b"tree " + tree_sha.encode() + b"\n"
+    if parent: 
+        content+=b"parent " + parent.encode() + b"\n"
+
+    content += astr + b"\n" + cstr + b"\n\n" + cmsg.encode()
+    # content will be bytes
+
+    print(content)
+    sha = serialize('commit', content)
+    return sha
 
 def write_directory(dir_name):
     
